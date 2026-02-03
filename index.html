@@ -689,26 +689,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Halaman 5: Selesai -->
-        <div id="finish-page" class="page">
-            <div class="card">
-                <div class="header">
-                    <h1>✅ TryOut Selesai</h1>
-                    <p>Terima kasih telah mengikuti TryOut HSK</p>
-                </div>
-                
-                <div class="success-message" style="display: block;">
-                    TryOut berhasil diselesaikan dan jawaban tersimpan.
-                </div>
-                
-                <div style="text-align: center; font-size: 0.95em;">
-                    <p><strong>Bagian:</strong> <span id="completed-section">-</span></p>
-                    <p><strong>Waktu:</strong> <span id="final-time"></span></p>
-                    <p><strong>Status:</strong> <span id="exam-status">Berhasil</span></p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -1156,7 +1136,7 @@
 
         // Finish exam
         function finishExam() {
-            if (confirm('Yakin selesai?')) {
+            if (confirm('Selesai dengan bagian ini? Kembali ke pemilihan bagian?')) {
                 examState.isExamActive = false;
                 clearInterval(examState.timerInterval);
                 
@@ -1170,26 +1150,6 @@
                     examData.completedSections.push(examState.currentSection);
                 }
                 
-                // Calculate final time
-                const endTime = new Date();
-                const totalTime = Math.floor((endTime - examState.startTime) / 1000);
-                const finalHours = Math.floor(totalTime / 3600);
-                const finalMinutes = Math.floor((totalTime % 3600) / 60);
-                const finalSeconds = totalTime % 60;
-                
-                document.getElementById('final-time').textContent = 
-                    `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}:${finalSeconds.toString().padStart(2, '0')}`;
-                
-                // Set completed section
-                document.getElementById('completed-section').textContent = 
-                    examState.currentSection ? CONFIG.sectionNames[examState.currentSection] : 'Tidak ada';
-                
-                // Set status
-                if (examState.violationCount > 0) {
-                    document.getElementById('exam-status').textContent = 
-                        `Selesai (${examState.violationCount} pelanggaran)`;
-                }
-                
                 // Hide indicators
                 document.getElementById('timer-display').style.display = 'none';
                 document.getElementById('section-indicator').style.display = 'none';
@@ -1200,15 +1160,44 @@
                     document.exitFullscreen();
                 }
                 
-                showPage('finish-page');
+                // Reset current section
+                examState.currentSection = null;
+                
+                // Go back to section selection
+                showPage('section-selection-page');
             }
         }
 
         function autoFinishExam() {
             examState.isExamActive = false;
             clearInterval(examState.timerInterval);
-            alert('Waktu habis! TryOut ditutup otomatis.');
-            finishExam();
+            alert('Waktu habis! Kembali ke pemilihan bagian.');
+            
+            // Clear any pending timeouts
+            if (examState.warningTimeout) {
+                clearTimeout(examState.warningTimeout);
+            }
+            
+            // Add completed section
+            if (examState.currentSection && !examData.completedSections.includes(examState.currentSection)) {
+                examData.completedSections.push(examState.currentSection);
+            }
+            
+            // Hide indicators
+            document.getElementById('timer-display').style.display = 'none';
+            document.getElementById('section-indicator').style.display = 'none';
+            document.getElementById('violation-counter').style.display = 'none';
+            
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            
+            // Reset current section
+            examState.currentSection = null;
+            
+            // Go back to section selection
+            showPage('section-selection-page');
         }
 
         // Prevent page reload/close during exam
